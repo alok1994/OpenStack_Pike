@@ -347,6 +347,7 @@ class TestOpenStackCases(unittest.TestCase):
 
     @pytest.mark.run(order=19)
     def test_validate_a_record_of_instance_from_internal_network(self):
+	fqdn_nios = ''
         a_records = json.loads(wapi_module.wapi_request('GET',object_type='record:a'))
         for l in range(len(a_records)):
            record_name = a_records[l]['name']
@@ -361,7 +362,7 @@ class TestOpenStackCases(unittest.TestCase):
         port_list_openstack = proc.list_ports()
         ports_list = port_list_openstack['ports']
         for l in range(len(ports_list)):
-           if ('compute:None' == ports_list[l]['device_owner']):
+           if ('compute:nova' == ports_list[l]['device_owner']):
                ip_address = ports_list[l]['fixed_ips'][0]['ip_address']
 	       fqdn = "host-"+'-'.join(ip_address.split('.'))+'.'+zone_name
 	assert fqdn_nios == fqdn
@@ -395,10 +396,10 @@ class TestOpenStackCases(unittest.TestCase):
         port_list_openstack = proc.list_ports()
         ports_list = port_list_openstack['ports']
 	for l in range(len(ports_list)):
-           if ('compute:None' == ports_list[l]['device_owner']):
+           if ('compute:nova' == ports_list[l]['device_owner']):
                port_id_openstack = ports_list[l]['id']
                device_id_openstack = ports_list[l]['device_id']
-	       device_owner_opstk = 'compute:None'
+	       device_owner_opstk = 'compute:nova'
         assert vm_name_nios == vm_name_openstack and \
                vm_id_nios == vm_id_openstack and \
                tenant_name_nios == tenant_name and \
@@ -416,7 +417,7 @@ class TestOpenStackCases(unittest.TestCase):
         port_list_openstack = proc.list_ports()
         ports_list = port_list_openstack['ports']
         for l in range(len(ports_list)):
-           if ('compute:None' == ports_list[l]['device_owner']):
+           if ('compute:nova' == ports_list[l]['device_owner']):
 	       ip_address_opstk = ports_list[l]['fixed_ips'][0]['ip_address']
 
 	ref_v = json.loads(wapi_module.wapi_request('GET',object_type='fixedaddress',params="?ipv4addr="+ip_address_opstk))
@@ -484,7 +485,7 @@ class TestOpenStackCases(unittest.TestCase):
            if ('network:floatingip' == ports_list[l]['device_owner']):
                port_id_openstack = ports_list[l]['id']
                device_id_openstack = ports_list[l]['device_id']
-               device_owner_opstk = 'compute:None'
+               device_owner_opstk = 'compute:nova'
 	assert vm_name_nios == vm_name_openstack and \
                vm_id_nios == vm_id_openstack and \
                tenant_name_nios == tenant_name and \
@@ -564,3 +565,4 @@ class TestOpenStackCases(unittest.TestCase):
 	delete_port = proc.delete_port(port_id_openstack)
         delete_net = proc.delete_network(ext_network)
         assert delete_net == ()
+
