@@ -20,6 +20,7 @@ tenant_name = 'admin'
 network = 'net1'
 Modify_Network_name = 'Updated_Network_Name'
 subnet_name = "snet"
+updated_subnet_name = 'updated_subnet_name'
 instance_name = 'inst'
 subnet = "10.2.0.0/24"
 custom_net_view = "openstack_view"
@@ -4098,3 +4099,33 @@ class TestOpenStackCases(unittest.TestCase):
                EAs['extattrs']['Cloud API Owned']['value'] == 'True' and \
                EAs['extattrs']['CMP Type']['value'] == 'OpenStack'
 
+    @pytest.mark.run(order=246)
+    def test_update_SubnetName(self):
+        proc = util.utils()
+        modified_subnet = proc.update_subnet(subnet_name,updated_subnet_name)
+        assert modified_subnet == updated_subnet_name
+
+    @pytest.mark.run(order=247)
+    def test_Validate_EAs_AfterModified_SubnetName(self):
+        proc = wapi_module.wapi_request('GET',object_type = 'network',params="?network="+subnet)
+        session = util.utils()
+        Net_name = session.get_network(Modify_Network_name)
+        Net_id = session.get_network_id(Modify_Network_name)
+        Sub_name = session.get_subnet_name(subnet_name)
+        Snet_ID = session.get_subnet_id(updated_subnet_name)
+        resp = json.loads(proc)
+        ref_v = resp[0]['_ref']
+        EAs = json.loads(wapi_module.wapi_request('GET',object_type = ref_v + '?_return_fields=extattrs'))
+        assert EAs['extattrs']['Network Name']['value'] == Net_name and \
+               EAs['extattrs']['Network ID']['value'] == Net_id and \
+               EAs['extattrs']['Subnet Name']['value'] == updated_subnet_name and \
+               EAs['extattrs']['Subnet ID']['value'] == Snet_ID and \
+               EAs['extattrs']['Network Encap']['value'] == 'vxlan' and \
+               EAs['extattrs']['Cloud API Owned']['value'] == 'True' and \
+               EAs['extattrs']['CMP Type']['value'] == 'OpenStack'
+
+    @pytest.mark.run(order=248)
+    def test_delete_UpdateNetworkSubnet(self):
+        session = util.utils()
+        delete_net = session.delete_network(Modify_Network_name)
+        assert delete_net == ()
