@@ -4260,21 +4260,30 @@ class TestOpenStackCases(unittest.TestCase):
 
     @pytest.mark.run(order=256)
     def test_validate_port_entry_SubnetName_Capital_Letter_OPENSTACK_929(self):
+	ip_addresses = ''
 	ref_v_zone = json.loads(wapi_module.wapi_request('GET',object_type='zone_auth'))
-        zone_name = ref_v_zone[0]['fqdn']
-        host_records = json.loads(wapi_module.wapi_request('GET',object_type='record:host'))
-        host_record_name = host_records[0]['name']
-        proc = util.utils()
-        port_list_openstack = proc.list_ports()
-	ports_list = port_list_openstack['ports']
+	zone_name = ref_v_zone[0]['fqdn']
+	count = 1
+        while count<=10:
+            ref_v_host_record = json.loads(wapi_module.wapi_request('GET',object_type='record:host'))
+            if ref_v_host_record == []:
+                count = count + 1
+                time.sleep(1)
+                continue
+            host_record_name = ref_v_host_record[0]['name']
+            break
+	proc = util.utils()
+	port_list_openstack = proc.list_ports()
+        ports_list = port_list_openstack['ports']
         for l in range(len(ports_list)):
            if ('network:dhcp' == ports_list[l]['device_owner']):
-            ip_address = ports_list[l]['fixed_ips'][0]['ip_address']
-        host_record_openstack = "dhcp-port-"+'-'.join(ip_address.split('.'))+'.'+zone_name
+            ip_addresses = ports_list[l]['fixed_ips'][0]['ip_address']
+        host_record_openstack = "dhcp-port-"+'-'.join(ip_addresses.split('.'))+'.'+zone_name
         assert host_record_name == host_record_openstack
 
     @pytest.mark.run(order=257)
     def test_validate_port_entry_EAs_OPENSTACK_929(self):
+	tenant_id_openstack = ''
         host_records = json.loads(wapi_module.wapi_request('GET',object_type='record:host'))
         ref_v = host_records[0]['_ref']
         EAs = json.loads(wapi_module.wapi_request('GET',object_type=ref_v+'?_return_fields=extattrs'))
@@ -4352,21 +4361,29 @@ class TestOpenStackCases(unittest.TestCase):
 
     @pytest.mark.run(order=261)
     def test_validate_port_entry_NetworkName_and_SubnetName_Capital_letter_OPENSTACK_929(self):
-        ref_v_zone = json.loads(wapi_module.wapi_request('GET',object_type='zone_auth'))
+	ip_addresses = ''
+	ref_v_zone = json.loads(wapi_module.wapi_request('GET',object_type='zone_auth'))
         zone_name = ref_v_zone[0]['fqdn']
-        host_records = json.loads(wapi_module.wapi_request('GET',object_type='record:host'))
-        host_record_name = host_records[0]['name']
+        count = 1
+        while count<=10:
+            ref_v_host_record = json.loads(wapi_module.wapi_request('GET',object_type='record:host'))
+            if ref_v_host_record == []:
+                count = count + 1
+                time.sleep(1)
+                continue
+            host_record_name = ref_v_host_record[0]['name']
+            break
         proc = util.utils()
         port_list_openstack = proc.list_ports()
         ports_list = port_list_openstack['ports']
         for l in range(len(ports_list)):
            if ('network:dhcp' == ports_list[l]['device_owner']):
-            ip_address = ports_list[l]['fixed_ips'][0]['ip_address']
-        host_record_openstack = "dhcp-port-"+'-'.join(ip_address.split('.'))+'.'+zone_name
-        assert host_record_name == host_record_openstack
+            ip_addresses = ports_list[l]['fixed_ips'][0]['ip_address']
+        host_record_openstack = "dhcp-port-"+'-'.join(ip_addresses.split('.'))+'.'+zone_name
 
     @pytest.mark.run(order=262)
     def test_validate_port_entry_EAs_NetworkName_and_SubnetName_Capital_Letter_OPENSTACK_929(self):
+	tenant_id_openstack = ''
         host_records = json.loads(wapi_module.wapi_request('GET',object_type='record:host'))
         ref_v = host_records[0]['_ref']
         EAs = json.loads(wapi_module.wapi_request('GET',object_type=ref_v+'?_return_fields=extattrs'))
@@ -4401,3 +4418,4 @@ class TestOpenStackCases(unittest.TestCase):
         session = util.utils()
         delete_net = session.delete_network(network1)
         assert delete_net == ()
+
