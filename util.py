@@ -212,8 +212,8 @@ class utils:
                 else:
                     break
 
-	def update_instance(self,updated_server_name):
-	    server_id = self.get_servers_id()
+	def update_instance(self,instance_name,updated_server_name):
+	    server_id = self.get_servers_id(instance_name)
             updated_instance = self.nova_client.servers.update(server_id,name=updated_server_name)
 	    return updated_instance
 

@@ -22,6 +22,7 @@ Modify_Network_name = 'Updated_Network_Name'
 subnet_name = "snet"
 updated_subnet_name = 'updated_subnet_name'
 instance_name = 'inst'
+updated_instance_name = 'updated_instance_name'
 subnet = "10.2.0.0/24"
 custom_net_view = "openstack_view"
 ext_network = "ext_net"
@@ -4047,7 +4048,7 @@ class TestOpenStackCases(unittest.TestCase):
         assert delete_net == ()
 
     @pytest.mark.run(order=242)
-    def test_Network_UpdateNetworkNameCase(self):
+    def test_CreateNetwork_UpdateNetworkNameCase(self):
 	proc = util.utils()
         proc.create_network(network)
 	proc.create_subnet(network, subnet_name, subnet)
@@ -4125,7 +4126,91 @@ class TestOpenStackCases(unittest.TestCase):
                EAs['extattrs']['CMP Type']['value'] == 'OpenStack'
 
     @pytest.mark.run(order=248)
-    def test_delete_UpdateNetworkSubnet(self):
+    def test_deploy_instnace_for_Update_Instance_Name(self):
+        proc = util.utils()
+        proc.launch_instance(instance_name,Modify_Network_name)
+        instance = proc.get_server_name(instance_name)
+        status = proc.get_server_status(instance_name)
+        assert instance_name == instance and status == 'ACTIVE'
+
+    @pytest.mark.run(order=249)
+    def test_update_instance_name(self):
+        proc = util.utils()
+        modified_instance = proc.update_instance(instance_name,updated_instance_name)
+        flag = False
+        instance_names = str(modified_instance)
+        if (re.search(r""+updated_instance_name,instance_names)):
+              flag = True
+        assert flag
+
+    @pytest.mark.run(order=250)
+    def test_validate_Host_record_UpdateInstnaceNameCase(self):
+        ref_v_zone = json.loads(wapi_module.wapi_request('GET',object_type='zone_auth'))
+        zone_name = ref_v_zone[0]['fqdn']
+	proc = util.utils()
+        ip_add = proc.get_instance_ips(updated_instance_name)
+        ip_address = ip_add[Modify_Network_name][0]['addr']
+        ref_v_host_record = json.loads(wapi_module.wapi_request('GET',object_type='record:host'))
+	fqdn = "host-"+'-'.join(ip_address.split('.'))+'-'+tenant_name+'.'+zone_name
+	for l in range(len(ref_v_host_record)):
+		if ip_address == ref_v_host_record[l]['ipv4addrs'][0]['ipv4addr']:
+		     host_record_name = ref_v_host_record[l]['name']
+	assert fqdn == host_record_name
+
+    @pytest.mark.run(order=251)
+    def test_validate_UpdatedInstanceName_as_EA_OPENSTACK_931(self):
+	proc = util.utils()
+        ip_add = proc.get_instance_ips(updated_instance_name)
+        ip_address = ip_add[Modify_Network_name][0]['addr']
+        host_ip = "host-"+'-'.join(ip_address.split('.'))
+        port_list_openstack = proc.list_ports()
+        ports_list = port_list_openstack['ports']
+        for l in range(len(ports_list)):
+            if ('compute:nova' == ports_list[l]['device_owner']):
+               port_id_openstack = ports_list[l]['id']
+               device_id_openstack = ports_list[l]['device_id']
+               device_owner_opstk = 'compute:nova'
+        ref_v_host_record = json.loads(wapi_module.wapi_request('GET',object_type='record:host'))
+	for l in range(len(ref_v_host_record)):
+		host_records = ref_v_host_record[l]['name']
+		if (host_records.startswith(host_ip)):	
+            	    ref_v = ref_v_host_record[l]['_ref']
+           	    EAs = json.loads(wapi_module.wapi_request('GET',object_type=ref_v+'?_return_fields=extattrs'))
+                    vm_name_nios = EAs['extattrs']['VM Name']['value']
+                    vm_id_nios = EAs['extattrs']['VM ID']['value']
+                    tenant_name_nios = EAs['extattrs']['Tenant Name']['value']
+ 	            tenant_id_nios = EAs['extattrs']['Tenant ID']['value']
+        	    port_id_nios = EAs['extattrs']['Port ID']['value']
+            	    ip_type_nios = EAs['extattrs']['IP Type']['value']
+                    device_id_nios = EAs['extattrs']['Port Attached Device - Device ID']['value']
+                    device_owner_nios = EAs['extattrs']['Port Attached Device - Device Owner']['value']
+                    cmp_type_nios = EAs['extattrs']['CMP Type']['value']
+                    cloud_api_owned = EAs['extattrs']['Cloud API Owned']['value']
+                    vm_id_openstack = proc.get_servers_id(updated_instance_name)
+                    vm_name_openstack = proc.get_server_name(updated_instance_name)
+                    vm_tenant_id_openstack = proc.get_server_tenant_id()
+                    ip_adds = proc.get_instance_ips(updated_instance_name)
+                    inst_ip_address = ip_adds[Modify_Network_name][0]['addr']
+	assert vm_name_nios == vm_name_openstack and \
+               vm_id_nios == vm_id_openstack and \
+               tenant_name_nios == tenant_name and \
+               tenant_id_nios == vm_tenant_id_openstack and \
+               port_id_nios == port_id_openstack and \
+               ip_type_nios == 'Fixed' and \
+               device_owner_opstk == device_owner_nios and \
+               cmp_type_nios == 'OpenStack' and \
+               cloud_api_owned == 'True' and \
+               device_id_nios == device_id_openstack
+
+    @pytest.mark.run(order=252)
+    def test_terminate_instance_UpdateInstanceNameCase(self):
+        proc = util.utils()
+	proc.terminate_instance(updated_instance_name)
+	instance = proc.get_server_name(updated_instance_name)
+        assert instance == None
+
+    @pytest.mark.run(order=253)
+    def test_delete_UpdateNetworkSubnetNameCases(self):
         session = util.utils()
         delete_net = session.delete_network(Modify_Network_name)
         assert delete_net == ()
