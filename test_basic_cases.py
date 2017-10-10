@@ -4261,7 +4261,7 @@ class TestOpenStackCases(unittest.TestCase):
     @pytest.mark.run(order=256)
     def test_validate_port_entry_SubnetName_Capital_Letter_OPENSTACK_929(self):
 	ip_addresses = ''
-	host_record_names = ''
+	hosti_record_names = ''
 	ref_v_zone = json.loads(wapi_module.wapi_request('GET',object_type='zone_auth'))
 	zone_name = ref_v_zone[0]['fqdn']
 	count = 1
@@ -4272,15 +4272,16 @@ class TestOpenStackCases(unittest.TestCase):
                 time.sleep(1)
                 continue
 	    break
-	host_record_name = ref_v_host_record[0]['name']
 	num = 1
 	while num <=5:
+	    ref_v_host_record = json.loads(wapi_module.wapi_request('GET',object_type='record:host'))
+	    host_record_name = ref_v_host_record[0]['name']
 	    if host_record_name.startswith('dhcp-port-'):
-	          host_record_names = ref_v_host_record[0]['name']
+	          host_record_name = ref_v_host_record[0]['name']
 	          break
 	    else:
 	        num = num + 1
-                time.sleep(1)
+                time.sleep(5)
                 continue
 	proc = util.utils()
 	port_list_openstack = proc.list_ports()
@@ -4289,7 +4290,7 @@ class TestOpenStackCases(unittest.TestCase):
            if ('network:dhcp' == ports_list[l]['device_owner']):
             ip_addresses = ports_list[l]['fixed_ips'][0]['ip_address']
         host_record_openstack = "dhcp-port-"+'-'.join(ip_addresses.split('.'))+'.'+zone_name
-        assert host_record_names == host_record_openstack
+        assert host_record_name == host_record_openstack
 
     @pytest.mark.run(order=257)
     def test_validate_port_entry_EAs_OPENSTACK_929(self):
@@ -4372,6 +4373,7 @@ class TestOpenStackCases(unittest.TestCase):
     @pytest.mark.run(order=261)
     def test_validate_port_entry_NetworkName_and_SubnetName_Capital_letter_OPENSTACK_929(self):
 	ip_addresses = ''
+        hosti_record_names = ''
         ref_v_zone = json.loads(wapi_module.wapi_request('GET',object_type='zone_auth'))
         zone_name = ref_v_zone[0]['fqdn']
         count = 1
@@ -4382,15 +4384,16 @@ class TestOpenStackCases(unittest.TestCase):
                 time.sleep(1)
                 continue
             break
-	host_record_name = ref_v_host_record[0]['name']
         num = 1
         while num <=5:
+            ref_v_host_record = json.loads(wapi_module.wapi_request('GET',object_type='record:host'))
+            host_record_name = ref_v_host_record[0]['name']
             if host_record_name.startswith('dhcp-port-'):
-                  host_record_names = ref_v_host_record[0]['name']
+                  host_record_name = ref_v_host_record[0]['name']
                   break
             else:
                 num = num + 1
-                time.sleep(1)
+                time.sleep(5)
                 continue
         proc = util.utils()
         port_list_openstack = proc.list_ports()
@@ -4399,7 +4402,7 @@ class TestOpenStackCases(unittest.TestCase):
            if ('network:dhcp' == ports_list[l]['device_owner']):
             ip_addresses = ports_list[l]['fixed_ips'][0]['ip_address']
         host_record_openstack = "dhcp-port-"+'-'.join(ip_addresses.split('.'))+'.'+zone_name
-        assert host_record_names == host_record_openstack
+        assert host_record_name == host_record_openstack
 
     @pytest.mark.run(order=262)
     def test_validate_port_entry_EAs_NetworkName_and_SubnetName_Capital_Letter_OPENSTACK_929(self):
